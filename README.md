@@ -49,3 +49,13 @@ Passwords are stored in passwords.json. The script will prompt you for the passw
 
 For detailed walkthroughs and solutions for each level, check out my dedicated repository:
 👉 **[Bandit Wargame Solutions](https://github.com/Futhark1393/Bandit-Wargame-Solutions)**
+
+
+## 🐛 Known Issues & Help Wanted
+
+We are currently aware of a few minor UX glitches related to the `pwntools` SSH shell handling:
+
+1.  **Visual Artifacts:** You may see raw ANSI escape codes (e.g., `\x1b[?2004h`) appearing in the terminal. This is due to how PTY/TTY is allocated to prevent "blind typing".
+2.  **Double Exit:** When closing an interactive session, you might need to type `exit` twice (once to close the remote bash, once to close the local pwntools process).
+
+**Contributions are welcome!** If you know how to fix these PTY rendering issues without losing input visibility, please submit a Pull Request. 🛠️

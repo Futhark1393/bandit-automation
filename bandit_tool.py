@@ -9,6 +9,9 @@ HOST = "bandit.labs.overthewire.org"
 PORT = 2220
 PASS_FILE = "passwords.json"
 
+# Log kirliliğini azalt (Sadece hataları gör)
+context.log_level = 'error'
+
 def load_passwords():
     if not os.path.exists(PASS_FILE):
         return {}
@@ -25,19 +28,17 @@ def save_password(level, password):
         json.dump(passwords, f, indent=4)
     print(f"[+] Level {level} şifresi kaydedildi.")
 
-def connect(level):
+def connect(level, command=None):
     passwords = load_passwords()
     level_key = str(level)
     
     if level_key not in passwords:
-        # Eğer şifre dosyada yoksa kullanıcıdan isteyip kaydedelim
         print(f"[*] Level {level} için şifre dosyada yok.")
-        pwd = input(f"Level {level} şifresini girin (Kaydetmek için): ").strip()
+        pwd = input(f"Level {level} şifresini girin: ").strip()
         if pwd:
             save_password(level, pwd)
             password = pwd
         else:
-            print("[-] Şifre girilmedi, çıkılıyor.")
             sys.exit(1)
     else:
         password = passwords[level_key]
@@ -46,17 +47,37 @@ def connect(level):
     print(f"[*] Bağlanılıyor: {user}@{HOST}...")
 
     try:
-        # Pwntools SSH bağlantısı
+        # SSH Bağlantısını kur
         s = ssh(user=user, host=HOST, port=PORT, password=password)
-        # Shell'i interaktif moda al
-        s.interactive()
+        
+        if command:
+            # Tek seferlik komut modu
+            print(f"[*] Komut çalıştırılıyor: {command}")
+            # run() metodunda tty gerekmez, direkt çıktıyı alırız
+            output = s.run(command).recvall().decode('utf-8')
+            print("-" * 30)
+            print(output.strip())
+            print("-" * 30)
+        else:
+            # İnteraktif mod (shell metodu kullanılarak)
+            print("[*] İnteraktif Bash başlatılıyor (Shell Modu)...")
+            # process yerine shell() kullanıyoruz, bu daha kararlıdır
+            sh = s.shell('/bin/bash')
+            sh.interactive()
+            sh.close()
+            
         s.close()
     except Exception as e:
-        print(f"[!] Bağlantı hatası: {e}")
+        print(f"[!] Hata: {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Kullanım: python3 bandit_tool.py <level_no>")
+        print("Kullanım: python3 bandit_tool.py <level_no> [komut]")
+        print("Örnek 1: python3 bandit_tool.py 0")
+        print("Örnek 2: python3 bandit_tool.py 0 'cat readme'")
         sys.exit(1)
     
-    connect(sys.argv[1])
+    level = sys.argv[1]
+    cmd = sys.argv[2] if len(sys.argv) > 2 else None
+    
+    connect(level, cmd)

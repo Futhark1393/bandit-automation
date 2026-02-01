@@ -4,12 +4,12 @@ import json
 import sys
 import os
 
-# Ayarlar
+# Configuration
 HOST = "bandit.labs.overthewire.org"
 PORT = 2220
 PASS_FILE = "passwords.json"
 
-# Log kirliliğini azalt (Sadece hataları gör)
+# Reduce log verbosity (Only show errors)
 context.log_level = 'error'
 
 def load_passwords():
@@ -26,15 +26,15 @@ def save_password(level, password):
     passwords[str(level)] = password
     with open(PASS_FILE, "w") as f:
         json.dump(passwords, f, indent=4)
-    print(f"[+] Level {level} şifresi kaydedildi.")
+    print(f"[+] Password for Level {level} saved.")
 
 def connect(level, command=None):
     passwords = load_passwords()
     level_key = str(level)
     
     if level_key not in passwords:
-        print(f"[*] Level {level} için şifre dosyada yok.")
-        pwd = input(f"Level {level} şifresini girin: ").strip()
+        print(f"[*] Password for Level {level} not found in file.")
+        pwd = input(f"Enter password for Level {level}: ").strip()
         if pwd:
             save_password(level, pwd)
             password = pwd
@@ -44,37 +44,37 @@ def connect(level, command=None):
         password = passwords[level_key]
 
     user = f"bandit{level}"
-    print(f"[*] Bağlanılıyor: {user}@{HOST}...")
+    print(f"[*] Connecting to: {user}@{HOST}...")
 
     try:
-        # SSH Bağlantısını kur
+        # Establish SSH Connection
         s = ssh(user=user, host=HOST, port=PORT, password=password)
         
         if command:
-            # Tek seferlik komut modu
-            print(f"[*] Komut çalıştırılıyor: {command}")
-            # run() metodunda tty gerekmez, direkt çıktıyı alırız
+            # Single command mode
+            print(f"[*] Executing command: {command}")
+            # No need for tty in run(), just get the output
             output = s.run(command).recvall().decode('utf-8')
             print("-" * 30)
             print(output.strip())
             print("-" * 30)
         else:
-            # İnteraktif mod (shell metodu kullanılarak)
-            print("[*] İnteraktif Bash başlatılıyor (Shell Modu)...")
-            # process yerine shell() kullanıyoruz, bu daha kararlıdır
+            # Interactive mode (using shell method)
+            print("[*] Starting Interactive Bash (Shell Mode)...")
+            # Using shell() instead of process() for better stability
             sh = s.shell('/bin/bash')
             sh.interactive()
             sh.close()
             
         s.close()
     except Exception as e:
-        print(f"[!] Hata: {e}")
+        print(f"[!] Error: {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Kullanım: python3 bandit_tool.py <level_no> [komut]")
-        print("Örnek 1: python3 bandit_tool.py 0")
-        print("Örnek 2: python3 bandit_tool.py 0 'cat readme'")
+        print("Usage: python3 bandit_tool.py <level_no> [command]")
+        print("Example 1: python3 bandit_tool.py 0")
+        print("Example 2: python3 bandit_tool.py 0 'cat readme'")
         sys.exit(1)
     
     level = sys.argv[1]

@@ -45,3 +45,7 @@ Passwords are stored in passwords.json. The script will prompt you for the passw
 }
 ```
 
+## 📚 Solutions & Write-ups
+
+For detailed walkthroughs and solutions for each level, check out my dedicated repository:
+👉 **[Bandit Wargame Solutions](https://github.com/Futhark1393/Bandit-Wargame-Solutions)**
